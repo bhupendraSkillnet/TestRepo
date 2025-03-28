@@ -10,6 +10,7 @@
             <state name="new" reserved="true" display="oms.state.new">
                 <flag>cancellable</flag>
             </state>
+            <state name="api call pending" display="api call pending"/>
             <state name="paid" reserved="true" display="oms.state.paid"/>
             <state name="canceled" display="oms.state.canceled"/>
             <state name="refunded" display="oms.state.refunded"/>
@@ -19,13 +20,22 @@
             <state name="shipped by merchant" reserved="true" display="oms.state.shipped-by-merchant"/>
             <state name="delivered" reserved="true" display="oms.state.delivered"/>
             <state name="closed" display="oms.state.closed"/>
+
         </states>
 
         <transitions>
-            <transition happy="true">
+            <!-- Move from new to API call pending -->
+            <transition>
                 <source>new</source>
+                <target>api call pending</target>
+                <event>trigger api call</event>
+            </transition>
+
+            <!-- Single condition to check API result -->
+            <transition happy="true" condition="MerchantSalesOrder/HandleApiCall">
+                <source>api call pending</source>
                 <target>paid</target>
-                <event>pay</event>
+                <event>call api</event>
             </transition>
 
             <transition>
@@ -90,6 +100,9 @@
         </transitions>
 
         <events>
+          <event name="trigger api call" onEnter="true" /> <!-- command="Api/ExecuteApiCall" -->
+            <event name="call api" onEnter="true"/>
+            <!-- <event name="call api" onEnter="true|false"/> -->
             <event name="pay" manual="true" command="Order/RequestProductReviews"/>
             <event name="cancel" manual="true"/>
             <event name="refund" manual="true"/>
